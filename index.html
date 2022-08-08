@@ -691,10 +691,13 @@
             if (apiInput) {
                 apiInput.value = window.sncfAPIKey;
 
-                apiInput.addEventListener('input paste', e => {
+                function setAPIKey(e) {
                     window.sncfAPIKey = apiInput.value;
                     localStorage.setItem('sncf-api-key', window.sncfAPIKey);
-                });
+                }
+
+                apiInput.addEventListener('input', setAPIKey);
+                apiInput.addEventListener('paste', setAPIKey);
             }
 
             const saveSearchInstance = new SaveSearch();
