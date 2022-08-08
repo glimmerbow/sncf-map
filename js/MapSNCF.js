@@ -220,10 +220,7 @@ class MapSNCF {
                 );
             });
         } else {
-            const errorMessage = document.createElement("p");
-            errorMessage.classList.add("journey__no-result");
-            errorMessage.textContent = "Pas de trajet pour cette recherche 😭";
-            this.journeysList.appendChild(errorMessage);
+            this.showErrorMessage();
         }
     }
 
@@ -426,7 +423,6 @@ class MapSNCF {
         ulSections.classList.add("journey__sections");
 
         journey.sections.forEach((section) => {
-
             if (section.duration <= 0) {
                 return;
             }
@@ -664,5 +660,14 @@ class MapSNCF {
         let transfers = parseInt(this.max_nb_transfers.value) || null;
 
         return transfers ? Math.min(transfers, 10) : 0;
+    }
+
+    showErrorMessage() {
+        if (!document.querySelector(".journey__no-result")) {
+            const errorMessage = document.createElement("p");
+            errorMessage.classList.add("journey__no-result");
+            errorMessage.textContent = "Pas de trajet pour cette recherche 😭";
+            this.journeysList.appendChild(errorMessage);
+        }
     }
 }
