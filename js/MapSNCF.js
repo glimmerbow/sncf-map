@@ -303,7 +303,8 @@ class MapSNCF {
             departurePlaceId +
             "/departures?" +
             new URLSearchParams({
-                from_datetime: "20220805T000000",
+                // from_datetime: "20220805T000000",
+                from_datetime: this.getUserDate(),
                 items_per_page: 30,
             });
 
@@ -326,6 +327,9 @@ class MapSNCF {
     }
 
     addToMapDepartures(response) {
+        this.resetMap();
+        this.clearJourneysList();
+        toggleJourneysList(false);
         // console.log(response);
         if (response.departures && response.departures.length > 0) {
             response.departures.forEach((departure) => {
