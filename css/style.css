@@ -512,6 +512,7 @@ body,
     .search {
         max-width: 100%;
         height: auto;
+        max-height: none;
         position: static;
         background-color: var(--primary-background);
         transform: none;
