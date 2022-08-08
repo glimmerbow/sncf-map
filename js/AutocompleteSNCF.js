@@ -8,10 +8,7 @@ class AutocompleteSNCF {
 
         this.url = "https://api.navitia.io/v1/coverage/sncf/places";
         this.headers = new Headers();
-        this.headers.append(
-            "Authorization",
-            ""
-        );
+        this.headers.append("Authorization", window.sncfAPIKey);
         this.fetchOptions = {
             method: "GET",
             headers: this.headers,

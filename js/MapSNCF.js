@@ -3,10 +3,7 @@ class MapSNCF {
         this.map;
 
         this.headers = new Headers();
-        this.headers.append(
-            "Authorization",
-            ""
-        );
+        this.headers.append("Authorization", window.sncfAPIKey);
         // this.url = "https://api.navitia.io/v1/journeys";
         this.url = "https://api.navitia.io/v1/coverage/sncf/journeys";
         this.urlDeparture =
@@ -277,7 +274,7 @@ class MapSNCF {
         if (coord && coord.lat && coord.lon) {
             L.marker([coord.lat, coord.lon])
                 .bindTooltip(tooltip, {
-                    permanent: true,
+                    // permanent: true,
                     direction: "top",
                     offset: [-15, -10],
                 })

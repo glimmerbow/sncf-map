@@ -523,6 +523,10 @@
             font-size: 20px;
             margin: 0;
         }
+
+        .journey__advanced:not(.open) {
+            display: none;
+        }
     </style>
 </head>
 
@@ -547,32 +551,38 @@
             <button type="button" class="journey__save">Sauvegarder l'itinéraire</button>
             <button type="button" class="journey__reset">Ré-initialiser la recherche</button>
 
-            <div class="journey__traveler_types">
-                <label for="traveler_type_standard">
-                    <input type="radio" value="standard" name="traveler_type" id="traveler_type_standard" checked />
-                    Standard
+            <button type="button" class="journey__advanced__toggle">Afficher les options avancées</button>
+            <div class="journey__advanced">
+                <div class="journey__traveler_types">
+                    <label for="traveler_type_standard">
+                        <input type="radio" value="standard" name="traveler_type" id="traveler_type_standard" checked />
+                        Standard
+                    </label>
+                    <label for="traveler_type_slow_walker">
+                        <input type="radio" value="slow_walker" name="traveler_type" id="traveler_type_slow_walker" />
+                        Marcheur-se lent-e
+                    </label>
+                    <label for="traveler_type_fast_walker">
+                        <input type="radio" value="fast_walker" name="traveler_type" id="traveler_type_fast_walker" />
+                        Marcheur-se rapide
+                    </label>
+                    <label for="traveler_type_luggage">
+                        <input type="radio" value="luggage" name="traveler_type" id="traveler_type_luggage" />
+                        Avec bagages
+                    </label>
+                    <label for="traveler_type_wheelchair">
+                        <input type="radio" value="wheelchair" name="traveler_type" id="traveler_type_wheelchair" />
+                        PMR
+                    </label>
+                </div>
+                <label for="max_nb_transfers">
+                    <input type="number" id="max_nb_transfers" placeholder="Maximum de correspondances"
+                        autocomplete="nope" />
                 </label>
-                <label for="traveler_type_slow_walker">
-                    <input type="radio" value="slow_walker" name="traveler_type" id="traveler_type_slow_walker" />
-                    Marcheur-se lent-e
-                </label>
-                <label for="traveler_type_fast_walker">
-                    <input type="radio" value="fast_walker" name="traveler_type" id="traveler_type_fast_walker" />
-                    Marcheur-se rapide
-                </label>
-                <label for="traveler_type_luggage">
-                    <input type="radio" value="luggage" name="traveler_type" id="traveler_type_luggage" />
-                    Avec bagages
-                </label>
-                <label for="traveler_type_wheelchair">
-                    <input type="radio" value="wheelchair" name="traveler_type" id="traveler_type_wheelchair" />
-                    PMR
+                <label for="api_key">
+                    <input type="text" id="api_key" placeholder="Clé d'API SNCF" autocomplete="nope" />
                 </label>
             </div>
-            <label for="max_nb_transfers">
-                <input type="number" id="max_nb_transfers" placeholder="Maximum de correspondances"
-                    autocomplete="nope" />
-            </label>
         </fieldset>
 
         <fieldset>
@@ -674,6 +684,19 @@
         window.currentJourneysLayersCoordinates = [];
 
         window.addEventListener('DOMContentLoaded', () => {
+            // Handle api key
+            window.sncfAPIKey = localStorage.getItem('sncf-api-key') || '';
+            const apiInput = document.querySelector('#api_key');
+
+            if (apiInput) {
+                apiInput.value = window.sncfAPIKey;
+
+                apiInput.addEventListener('input paste', e => {
+                    window.sncfAPIKey = apiInput.value;
+                    localStorage.setItem('sncf-api-key', window.sncfAPIKey);
+                });
+            }
+
             const saveSearchInstance = new SaveSearch();
             const invertSearchInstance = new InvertSearch();
             const mapInstance = new MapSNCF();
@@ -738,9 +761,26 @@
                         date.getFullYear(),
                     ].join('/');
                 }
+            }
 
+            const advancedToggle = document.querySelector('.journey__advanced__toggle');
+            const advancedSettings = document.querySelector('.journey__advanced');
+
+            if (advancedToggle && advancedSettings) {
+                advancedToggle.addEventListener('click', e => {
+                    e.preventDefault();
+
+                    advancedSettings.classList.toggle('open');
+
+                    if (advancedSettings.classList.contains('open')) {
+                        advancedToggle.textContent = 'Masquer les options avancées';
+                    } else {
+                        advancedToggle.textContent = 'Afficher les options avancées';
+                    }
+                });
             }
         });
+
         // TODO:
         // reorganize cache
         // autocomplete
