@@ -16,25 +16,9 @@ body.inverted-colors {
     --third-color: rebeccapurple;
 }
 
-@media (prefers-color-scheme: dark) {
-    body {
-        --primary-color: purple;
-        --primary-color-alpha: rgba(128, 0, 128, 0.50);
-        --primary-background: #000;
-        --secondary-color: #FFF;
-        --third-color: rebeccapurple;
-    }
-}
-
 /* https://gist.github.com/BrendonKoz/b1df234fe3ee388b402cd8e98f7eedbd */
 body.inverted-colors .map-tiles {
     filter: var(--map-tiles-filter, none);
-}
-
-@media (prefers-color-scheme: dark) {
-    .map-tiles {
-        filter: var(--map-tiles-filter, none);
-    }
 }
 
 html,

@@ -68,7 +68,7 @@ class AutocompleteSNCF {
         const hash = url.hashCode();
         const cachedData = localStorage.getItem(hash);
         if (cachedData && !window.forceCache) {
-            console.log(cachedData);
+            // console.log(cachedData);
             return this.responseHandler(JSON.parse(cachedData));
         } else {
             fetch(url, this.fetchOptions)

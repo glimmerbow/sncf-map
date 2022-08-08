@@ -25,13 +25,13 @@ class MapSNCF {
         this.defaultStyle = {
             // color: this.randColor(),
             color: "#FFF",
-            weight: 5,
+            weight: 3,
             opacity: 0.65,
-            // onEachFeature: this.onEachFeature.bind(this),
         };
 
         this.activeStyles = {
             color: "var(--primary-color)",
+            weight: 5,
             opacity: 1,
         };
 
@@ -67,6 +67,9 @@ class MapSNCF {
     }
 
     resetMap() {
+        window.currentJourneysLayersCoordinates = [];
+        window.currentJourneysLayers = [];
+
         this.map.remove();
         this.initMap();
     }
@@ -97,43 +100,12 @@ class MapSNCF {
                 if (journey) {
                     journey.classList.toggle("open");
                 }
-            } else if (!e.target.closest(".journey")) {
-                this.unlightJourneys();
+                // } else if (!e.target.closest(".journey")) {
+                //     this.unlightJourneys();
             }
         });
     }
 
-    searchAPI() {
-        const fromPlace = {
-            lat: this.from.getAttribute("lat"),
-            lon: this.from.getAttribute("lon"),
-        };
-        const toPlace = {
-            lat: this.to.getAttribute("lat"),
-            lon: this.to.getAttribute("lon"),
-        };
-
-        const url =
-            this.url +
-            "?" +
-            new URLSearchParams({
-                from: `${fromPlace.lon};${fromPlace.lat}`,
-                to: `${toPlace.lon};${toPlace.lat}`,
-                items_per_page: 10,
-            });
-        // const url =
-        //     "https://api.navitia.io/v1/coverage/sncf/journeys?from=2.35144%3B48.85374&to=3.08716%3B45.77400&";
-        // const url =
-        //     "https://api.navitia.io/v1/coverage/sncf/journeys?from=4.84329%3B45.74476&to=2.34867%3B48.85726&";
-
-        console.log(url);
-
-        fetch(url, this.fetchOptions)
-            .then((response) => response.json())
-            .then((response) => {
-                this.addToMap(response);
-            });
-    }
     searchAPI_SNCF() {
         this.loader.add();
 
@@ -147,9 +119,13 @@ class MapSNCF {
             min_nb_journeys: 10,
             // direct_path: "none",
             // max_nb_transfers: 2,
-            datetime: this.getUserDate(),
         };
 
+        const userDate = this.getUserDate();
+
+        if (userDate) {
+            urlArgs.datetime = userDate;
+        }
         const travelerType = this.getTravelerType();
 
         if (travelerType != this.travelerTypes[0]) {
@@ -166,6 +142,7 @@ class MapSNCF {
         const hash = url.hashCode();
         // console.log(hash);
         const cachedData = localStorage.getItem(hash);
+
         if (cachedData && !window.forceCache) {
             // console.log(cachedData);
             this.addToMap(JSON.parse(cachedData));
@@ -184,10 +161,11 @@ class MapSNCF {
     }
 
     addToMap(response) {
-        console.log(response);
+        // console.log(response);
         if (response.journeys && response.journeys.length > 0) {
             this.resetMap();
             this.clearJourneysList();
+
             response.journeys.forEach((journey, index) => {
                 let geojson = [];
 
@@ -201,11 +179,17 @@ class MapSNCF {
                     }
 
                     if (section.from) {
-                        const fromData = this.setMarkerOfSection(section.from);
+                        const fromData = this.setMarkerOfSection(
+                            section.from,
+                            index
+                        );
                     }
 
                     if (section.to) {
-                        const toData = this.setMarkerOfSection(section.to);
+                        const toData = this.setMarkerOfSection(
+                            section.to,
+                            index
+                        );
                     }
                 });
 
@@ -225,12 +209,6 @@ class MapSNCF {
                         },
                     },
                 });
-
-                // layer.on("click", function (e) {
-                //     layer.setStyle({
-                //         color: "#000",
-                //     });
-                // });
 
                 layer.addTo(this.map);
 
@@ -253,32 +231,40 @@ class MapSNCF {
         return "#" + Math.floor(Math.random() * 16777215).toString(16);
     }
 
-    setMarkerOfSection(sectionElement) {
+    setMarkerOfSection(sectionElement, index) {
         switch (sectionElement.embedded_type) {
             case "address":
                 this.addMarker(
                     sectionElement.address.coord,
-                    sectionElement.name
+                    sectionElement.name,
+                    index
                 );
                 break;
             case "stop_point":
                 this.addMarker(
                     sectionElement.stop_point.coord,
-                    sectionElement.name
+                    sectionElement.name,
+                    index
                 );
                 break;
         }
     }
 
-    addMarker(coord, tooltip) {
+    addMarker(coord, tooltip, index) {
         if (coord && coord.lat && coord.lon) {
-            L.marker([coord.lat, coord.lon])
-                .bindTooltip(tooltip, {
-                    // permanent: true,
-                    direction: "top",
-                    offset: [-15, -10],
-                })
-                .addTo(this.map);
+            let marker = L.marker([coord.lat, coord.lon]).bindTooltip(tooltip, {
+                // permanent: true,
+                direction: "top",
+                offset: [-15, -10],
+            });
+
+            marker.addTo(this.map);
+
+            if (!window.currentJourneysMarkers[index]) {
+                window.currentJourneysMarkers[index] = [];
+            }
+
+            window.currentJourneysMarkers[index].push(marker);
         }
     }
 
@@ -312,7 +298,7 @@ class MapSNCF {
         const hash = url.hashCode();
         const cachedData = localStorage.getItem(hash);
         if (cachedData) {
-            console.log(cachedData);
+            // console.log(cachedData);
             return this.addToMapDepartures(JSON.parse(cachedData));
         } else {
             fetch(url, this.fetchOptions)
@@ -330,7 +316,7 @@ class MapSNCF {
         this.resetMap();
         this.clearJourneysList();
         toggleJourneysList(false);
-        // console.log(response);
+
         if (response.departures && response.departures.length > 0) {
             response.departures.forEach((departure) => {
                 let geojson = [
@@ -438,10 +424,8 @@ class MapSNCF {
     getJourneySections(journey) {
         let ulSections = document.createElement("ul");
         ulSections.classList.add("journey__sections");
-        // ulSections.style.height = Math.round(journey.duration / 100) + "px";
 
         journey.sections.forEach((section) => {
-            // console.log(section);
 
             if (section.duration <= 0) {
                 return;
@@ -579,9 +563,15 @@ class MapSNCF {
 
             if (index != null) {
                 if (window.currentJourneysLayers[index]) {
+                    this.unlightJourneys();
+
                     window.currentJourneysLayers[index].setStyle(
                         this.activeStyles
                     );
+
+                    window.currentJourneysLayers[index].bringToFront();
+
+                    this.highlightIcons(index);
 
                     this.map.flyToBounds(
                         window.currentJourneysLayersCoordinates[index],
@@ -609,49 +599,31 @@ class MapSNCF {
         }
     }
 
-    highlightLayer(feature, layer) {
-        layer.setStyle((feature) => {
-            return {
-                fillColor: "orange",
-                color: "white",
-            };
-        });
-    }
-
-    onEachFeature(feature, layer) {
-        // https://gis.stackexchange.com/a/246919
-        // var pointLayer = L.geoJSON(null, {
-        //     pointToLayer: function (feature, latlng) {
-        //         label = String(feature.properties.name); // Must convert to string, .bindTooltip can't use straight 'feature.properties.attribute'
-        //         return new L.CircleMarker(latlng, {
-        //             radius: 1,
-        //         })
-        //             .bindTooltip(label, { permanent: true, opacity: 0.7 })
-        //             .openTooltip();
-        //     },
-        // });
-        // pointLayer.addData(data_points);
-        // mymap.addLayer(pointLayer);
-        // layer.bindTooltip(String(feature.properties.name), {
-        //     permanent: true,
-        // });
-        console.log(feature, layer);
-        layer.on("mouseover", (e) => {
-            console.log("mouseover");
-            // layer.setIcon(highlightMarker);
-            // layer.openTooltip();
-            this.highlightLayer(feature, layer);
-        });
-        layer.on("mouseout", (e) => {
-            console.log("mouseout");
-            // layer.setIcon(defaultMarker);
-            // layer.closeTooltip();
-        });
+    highlightIcons(index) {
+        if (
+            window.currentJourneysMarkers[index] &&
+            window.currentJourneysMarkers[index].length
+        ) {
+            window.currentJourneysMarkers.forEach((markers, markersIndex) => {
+                markers.forEach((marker) => {
+                    if (markersIndex == index) {
+                        marker.openTooltip();
+                    } else {
+                        marker.closeTooltip();
+                    }
+                });
+            });
+        }
     }
 
     getUserDate() {
+        if (!this.datetime.value) {
+            return null;
+        }
+
         const userDate = getDateFromIso(this.datetime.value);
         let date = new Date();
+        date.setHours(0, 0, 0, 0);
 
         if (userDate.getTime() > date.getTime()) {
             date = userDate;

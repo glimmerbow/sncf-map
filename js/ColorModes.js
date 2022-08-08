@@ -9,9 +9,11 @@ class ColorModes {
     }
 
     onLoad() {
-        if (localStorage.getItem("inverted-colors") == 1 && this.toggle) {
-            document.body.classList.add("inverted-colors");
-            this.toggle.textContent = this.day;
+        if (
+            this.isDarkMode() ||
+            (localStorage.getItem("inverted-colors") == 1 && this.toggle)
+        ) {
+            this.enableDarkMode();
         }
     }
 
@@ -31,5 +33,17 @@ class ColorModes {
                 }
             });
         }
+    }
+
+    enableDarkMode() {
+        document.body.classList.add("inverted-colors");
+        this.toggle.textContent = this.day;
+    }
+
+    isDarkMode() {
+        return (
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+        );
     }
 }

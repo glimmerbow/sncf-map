@@ -62,6 +62,12 @@ String.prototype.toHours = function () {
     return hours + ":" + minutes;
 };
 
+Date.prototype.addDays = function (days) {
+    let date = new Date(this.valueOf());
+    date.setDate(date.getDate() + days);
+    return date;
+};
+
 function eventDispatcher(eventName, node = document) {
     console.log(eventName, node);
     return node.dispatchEvent(
@@ -89,7 +95,6 @@ function toggleJourneysList(show = true) {
 }
 
 function getDateFromIso(date) {
-    // console.log(date);
     const { year, month, day, hours, minutes, seconds } = date.match(
         /(?<year>\d{4})(?<month>\d{2})(?<day>\d{2})T(?<hours>\d{2})(?<minutes>\d{2})(?<seconds>\d{2})/,
         "ig"
@@ -97,9 +102,29 @@ function getDateFromIso(date) {
     return new Date(`${year}-${month}-${day}T${hours}:${minutes}:${seconds}`);
 }
 
+function toYYYYMMDD(date, separator = "-") {
+    return [
+        date.getFullYear(),
+        ("0" + (date.getMonth() + 1)).slice(-2),
+        ("0" + date.getDate()).slice(-2),
+    ].join(separator);
+}
+
+function updateDateTime() {
+    const dateTime = document.querySelector("#datetime");
+    const frontDateTime = document.querySelector("#front_datetime");
+
+    if (dateTime && frontDateTime && frontDateTime.value) {
+        const currentUserDate = new Date(frontDateTime.value);
+
+        dateTime.value = toYYYYMMDD(currentUserDate, "") + "T000000";
+    }
+}
+
 window.forceCache = false;
 window.currentJourneysLayers = [];
 window.currentJourneysLayersCoordinates = [];
+window.currentJourneysMarkers = [];
 
 window.addEventListener("DOMContentLoaded", () => {
     // Handle api key
@@ -117,6 +142,19 @@ window.addEventListener("DOMContentLoaded", () => {
         apiInput.addEventListener("input", setAPIKey);
         apiInput.addEventListener("paste", setAPIKey);
     }
+
+    // Handle day choice
+    const frontDateTime = document.querySelector("#front_datetime");
+
+    if (frontDateTime) {
+        const today = toYYYYMMDD(new Date());
+        frontDateTime.setAttribute("min", today);
+        frontDateTime.value = today;
+        frontDateTime.setAttribute("max", toYYYYMMDD(new Date().addDays(20)));
+        updateDateTime();
+    }
+
+    frontDateTime.addEventListener("change", updateDateTime);
 
     const saveSearchInstance = new SaveSearch();
     const invertSearchInstance = new InvertSearch();
@@ -181,20 +219,20 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const colorModesInstance = new ColorModes();
 
-    const journeyDate = document.querySelector(".journey__date");
-    const dateTime = document.querySelector("#datetime");
+    // const journeyDate = document.querySelector(".journey__date");
+    // const dateTime = document.querySelector("#datetime");
 
-    if (journeyDate && dateTime) {
-        const date = getDateFromIso(dateTime.value);
+    // if (journeyDate && dateTime) {
+    //     const date = getDateFromIso(dateTime.value);
 
-        if (date) {
-            journeyDate.textContent = [
-                ("0" + date.getDate()).slice(-2),
-                ("0" + (date.getMonth() + 1)).slice(-2),
-                date.getFullYear(),
-            ].join("/");
-        }
-    }
+    //     if (date) {
+    //         journeyDate.textContent = [
+    //             ("0" + date.getDate()).slice(-2),
+    //             ("0" + (date.getMonth() + 1)).slice(-2),
+    //             date.getFullYear(),
+    //         ].join("/");
+    //     }
+    // }
 
     const advancedToggle = document.querySelector(".journey__advanced__toggle");
     const advancedSettings = document.querySelector(".journey__advanced");
